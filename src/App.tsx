@@ -1,23 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { IntroScreen } from './screens/IntroScreen';
 import { StartScreen } from './screens/StartScreen';
 import { GameScreen } from './screens/GameScreen';
+import { LoginScreen } from './screens/LoginScreen';
+import { Header } from './components/Header';
 import { useGameState } from './hooks/useGameState';
 import type { PetType } from './types/game';
 
-type Screen = 'intro' | 'start' | 'game';
+type Screen = 'intro' | 'auth' | 'start' | 'game';
 
 function App() {
     const [currentScreen, setCurrentScreen] = useState<Screen>('intro');
     const { gameState, startGame, resetGame, increaseStat } = useGameState();
+    const { ready, authenticated } = usePrivy();
 
-    // If game state exists, skip to game screen
-    if (gameState && currentScreen !== 'game') {
-        setCurrentScreen('game');
-    }
+    // Effect to handle navigation based on auth and game state
+    useEffect(() => {
+        if (!ready) return;
+
+        if (authenticated) {
+            if (gameState) {
+                // If authenticated and has save data, go to game
+                setCurrentScreen('game');
+            } else if (currentScreen !== 'game') {
+                // If authenticated but no save data, go to start (create pet)
+                setCurrentScreen('start');
+            }
+        } else {
+            // If not authenticated and not in intro, go to auth
+            if (currentScreen !== 'intro') {
+                setCurrentScreen('auth');
+            }
+        }
+    }, [ready, authenticated, gameState, currentScreen]);
 
     const handleIntroComplete = () => {
-        setCurrentScreen('start');
+        if (authenticated) {
+            setCurrentScreen(gameState ? 'game' : 'start');
+        } else {
+            setCurrentScreen('auth');
+        }
     };
 
     const handleStartGame = (petName: string, petType: PetType) => {
@@ -36,8 +59,14 @@ function App() {
 
     return (
         <>
+            {currentScreen !== 'intro' && <Header />}
+
             {currentScreen === 'intro' && (
                 <IntroScreen onComplete={handleIntroComplete} />
+            )}
+
+            {currentScreen === 'auth' && (
+                <LoginScreen />
             )}
 
             {currentScreen === 'start' && (

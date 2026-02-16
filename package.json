@@ -9,9 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@privy-io/react-auth": "^3.13.1",
+    "nes.css": "^2.3.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "nes.css": "^2.3.0"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

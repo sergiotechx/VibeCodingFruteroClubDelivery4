@@ -13,7 +13,7 @@ export function IntroScreen({ onComplete }: IntroScreenProps) {
     }, [onComplete]);
 
     return (
-        <div className="intro-screen">
+        <div className="intro-screen" onClick={onComplete}>
             <video
                 className="intro-video"
                 src="/assets/intro.mp4"
