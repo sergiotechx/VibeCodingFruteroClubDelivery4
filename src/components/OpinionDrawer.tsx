@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { EvaluationCategory, EvaluationResult } from '../types/game';
 import { evaluateImage } from '../services/evaluationService';
 import './OpinionDrawer.css';
@@ -102,13 +103,17 @@ export function OpinionDrawer({ isOpen, onClose, petName, onEvaluationComplete }
         return '#FF634733';
     };
 
-    return (
-        <>
-            <div className="opinion-overlay" onClick={handleClose}></div>
+    return createPortal(
+        <div className="opinion-modal-wrapper">
+            <div className="opinion-overlay-backdrop" onClick={handleClose}></div>
             <div className="opinion-drawer nes-container is-dark">
                 <button className="nes-btn is-error close-btn" onClick={handleClose}>✕</button>
 
-                <h2 className="title">ELEMON: {petName} Estudiante</h2>
+                <h2 className="title">
+                    <div style={{ textShadow: '2px 2px #000', marginBottom: '0.25rem' }}>ELEMON</div>
+                    <div style={{ color: '#FFA500', fontSize: '1.2em', margin: '0.5rem 0', textTransform: 'uppercase' }}>{petName}</div>
+                    <div style={{ fontSize: '0.8em', color: '#ccc' }}>Estudiante</div>
+                </h2>
                 <p className="description">
                     Tu Elemon evaluará el material que subas. ¡Si te inspiras, se pondrá muy feliz!
                 </p>
@@ -189,6 +194,14 @@ export function OpinionDrawer({ isOpen, onClose, petName, onEvaluationComplete }
                         >
                             <div className="result-emoji">{getResultEmoji(result.score)}</div>
                             <h3 className="result-score">Puntuación: {result.score}/100</h3>
+
+                            {/* Coin Feedback */}
+                            <div className="coin-feedback" style={{ marginBottom: '1rem', fontWeight: 'bold' }}>
+                                {result.score >= 60 && <span style={{ color: '#228B22' }}>¡Ganaste 10 monedas! 💰</span>}
+                                {result.score >= 50 && result.score < 60 && <span style={{ color: '#8B4513' }}>Sin cambios en monedas 😐</span>}
+                                {result.score < 50 && <span style={{ color: '#D8000C' }}>Perdiste 3 monedas 💸</span>}
+                            </div>
+
                             <p className="result-feedback">{result.feedback}</p>
                         </div>
 
@@ -199,6 +212,7 @@ export function OpinionDrawer({ isOpen, onClose, petName, onEvaluationComplete }
                     </>
                 )}
             </div>
-        </>
+        </div>,
+        document.body
     );
 }
