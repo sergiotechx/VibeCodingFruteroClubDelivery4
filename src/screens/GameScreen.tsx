@@ -16,9 +16,11 @@ interface GameScreenProps {
 }
 
 export function GameScreen({ gameState, onAction, onEvaluation, onReset }: GameScreenProps) {
-    const { isMuted, toggleMute } = useAudioPlayer('/assets/music.mp3');
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
     const [isOpinionOpen, setIsOpinionOpen] = useState(false);
+
+    // Pause background music when OpinionDrawer is open
+    const { isMuted, toggleMute } = useAudioPlayer('/assets/music.mp3', isOpinionOpen);
 
     const emotion = getEmotion(gameState.stats);
     const spriteUrl = getSpriteUrl(gameState.petType, gameState.stage, emotion);
@@ -38,7 +40,7 @@ export function GameScreen({ gameState, onAction, onEvaluation, onReset }: GameS
 
     const handleEvaluationComplete = (result: EvaluationResult) => {
         onEvaluation(result);
-        setIsOpinionOpen(false);
+        // setIsOpinionOpen(false); // Removed to keep drawer open for continuous study
     };
 
     return (
@@ -167,12 +169,12 @@ export function GameScreen({ gameState, onAction, onEvaluation, onReset }: GameS
                             </div>
                         </button>
                         <button
-                            className="nes-btn is-primary action-btn opinion-btn"
+                            className="nes-btn is-warning action-btn opinion-btn"
                             onClick={() => setIsOpinionOpen(true)}
                             disabled={gameState.stage === 'dead'}
                         >
                             <div className="btn-content">
-                                <span>Opinión 🤔</span>
+                                <span>🤓 Estudiar</span>
                             </div>
                         </button>
                     </div>
@@ -207,6 +209,8 @@ export function GameScreen({ gameState, onAction, onEvaluation, onReset }: GameS
                 onClose={() => setIsOpinionOpen(false)}
                 petName={gameState.petName}
                 onEvaluationComplete={handleEvaluationComplete}
+                currentStage={gameState.stage}
+                evaluationCoins={gameState.evaluationCoins ?? 0}
             />
         </div>
     );

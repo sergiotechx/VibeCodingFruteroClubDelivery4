@@ -2,10 +2,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { db } from '../services/supabase';
 
-export function useAudioPlayer(audioUrl: string) {
+export function useAudioPlayer(audioUrl: string, isExternalPaused: boolean = false) {
     const { user } = usePrivy();
     const [isMuted, setIsMuted] = useState(false); // Default unmuted, will load from DB
     const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    // ... (loadSettings and toggleMute remain the same)
 
     // Load mute preference from Supabase
     useEffect(() => {
@@ -40,19 +42,23 @@ export function useAudioPlayer(audioUrl: string) {
                 await db.updateSettings(user.id, newMutedState);
             } catch (error) {
                 console.error('Failed to save audio settings:', error);
-                // Revert on failure? Maybe unnecessary for UI feeling
             }
         }
     }, [isMuted, user?.id]);
 
     // Initialize audio element
     useEffect(() => {
+        if (!audioUrl) {
+            audioRef.current = null;
+            return;
+        }
+
         const audio = new Audio(audioUrl);
         audio.loop = true;
         audioRef.current = audio;
 
-        // Try to play immediately if not muted
-        if (!isMuted) {
+        // Try to play immediately if not muted and not paused externally
+        if (!isMuted && !isExternalPaused) {
             audio.play().catch(() => {
                 // Autoplay policy might block this, expected
             });
@@ -62,20 +68,20 @@ export function useAudioPlayer(audioUrl: string) {
             audio.pause();
             audio.src = '';
         };
-    }, [audioUrl]); // Remove isMuted from dependency to avoid recreating audio on mute toggle
+    }, [audioUrl]); // Re-init if URL changes
 
-    // Control playback based on mute state
+    // Control playback based on mute state AND external pause
     useEffect(() => {
         if (!audioRef.current) return;
 
-        if (isMuted) {
+        if (isMuted || isExternalPaused) {
             audioRef.current.pause();
         } else {
             audioRef.current.play().catch((error: unknown) => {
                 console.error('Failed to play audio:', error);
             });
         }
-    }, [isMuted]);
+    }, [isMuted, isExternalPaused]);
 
     return {
         isMuted,
